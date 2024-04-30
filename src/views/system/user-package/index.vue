@@ -1,15 +1,21 @@
 <!-- 用户管理 -->
 <script setup lang="ts">
-import { getDetailPage, updateItem } from "@/api/system/user-package";
 import {
-  addUser,
-  deleteUsers,
-  downloadTemplateApi,
-  exportUser,
-  getUserForm,
-  importUser,
-  updateUser,
-} from "@/api/system/user";
+  addItem,
+  deleteItem,
+  getDetailPage,
+  getItemForm,
+  updateItem,
+} from "@/api/system/user-package";
+// import {
+//   addUser,
+//   deleteUsers,
+//   downloadTemplateApi,
+//   exportUser,
+//   getUserForm,
+//   importUser,
+//   updateUser,
+// } from "@/api/system/user-package";
 import { getDeptOptions } from "@/api/system/dept";
 import { getRoleOptions } from "@/api/system/role";
 import type { UploadInstance } from "element-plus";
@@ -19,6 +25,7 @@ import {
   PkgDetailPageVO,
   PkgDetailQuery,
 } from "@/api/system/user-package/types";
+import { UserForm } from "@/api/system/user/types";
 
 defineOptions({
   name: "Package",
@@ -26,7 +33,7 @@ defineOptions({
 });
 
 const queryFormRef = ref(ElForm); // 查询表单
-const userFormRef = ref(ElForm); // 用户表单
+const detailFormRef = ref(ElForm); // 用户表单
 const uploadRef = ref<UploadInstance>(); // 上传组件
 
 const loading = ref(false); //  加载状态 用于分页
@@ -43,7 +50,7 @@ const roleList = ref<OptionType[]>(); // 角色下拉数据源
 // 弹窗对象
 const dialog = reactive({
   visible: false,
-  type: "user-form",
+  type: "detail-form",
   width: 1200,
   title: "",
 });
@@ -63,9 +70,9 @@ const importData = reactive({
 // 校验规则
 const rules = reactive({
   username: [{ required: true, message: "用户名不能为空", trigger: "blur" }],
-  nickname: [{ required: true, message: "用户昵称不能为空", trigger: "blur" }],
-  deptId: [{ required: true, message: "所属部门不能为空", trigger: "blur" }],
-  roleIds: [{ required: true, message: "用户角色不能为空", trigger: "blur" }],
+  // nickname: [{required: true, message: "用户昵称不能为空", trigger: "blur"}],
+  // deptId: [{required: true, message: "所属部门不能为空", trigger: "blur"}],
+  // roleIds: [{required: true, message: "用户角色不能为空", trigger: "blur"}],
   email: [
     {
       pattern: /\w[-\w.+]*@([A-Za-z0-9][-A-Za-z0-9]+\.)+[A-Za-z]{2,14}/,
@@ -169,13 +176,13 @@ async function openDialog(type: string, id?: number) {
   dialog.visible = true;
   dialog.type = type;
 
-  if (dialog.type === "user-form") {
+  if (dialog.type === "detail-form") {
     // 用户表单弹窗
     await loadDeptOptions();
     await loadRoleOptions();
     if (id) {
       dialog.title = "修改";
-      getUserForm(id).then(({ data }) => {
+      getItemForm(id).then(({ data }) => {
         Object.assign(formData, { ...data });
       });
     } else {
@@ -197,8 +204,8 @@ async function openDialog(type: string, id?: number) {
 function closeDialog() {
   dialog.visible = false;
   if (dialog.type === "user-form") {
-    userFormRef.value.resetFields();
-    userFormRef.value.clearValidate();
+    detailFormRef.value.resetFields();
+    detailFormRef.value.clearValidate();
 
     formData.id = undefined;
     formData.status = 1;
@@ -210,13 +217,13 @@ function closeDialog() {
 
 /** 表单提交 */
 const handleSubmit = useThrottleFn(() => {
-  if (dialog.type === "user-form") {
-    userFormRef.value.validate((valid: any) => {
+  if (dialog.type === "detail-form") {
+    detailFormRef.value.validate((valid: any) => {
       if (valid) {
         const userId = formData.id;
         loading.value = true;
         if (userId) {
-          updateUser(userId, formData)
+          updateItem(userId, formData)
             .then(() => {
               ElMessage.success("修改用户成功");
               closeDialog();
@@ -224,7 +231,7 @@ const handleSubmit = useThrottleFn(() => {
             })
             .finally(() => (loading.value = false));
         } else {
-          addUser(formData)
+          addItem(formData)
             .then(() => {
               ElMessage.success("新增用户成功");
               closeDialog();
@@ -235,26 +242,26 @@ const handleSubmit = useThrottleFn(() => {
       }
     });
   } else if (dialog.type === "user-import") {
-    if (!importData?.deptId) {
-      ElMessage.warning("请选择部门");
-      return false;
-    }
-    if (!importData?.file) {
-      ElMessage.warning("上传Excel文件不能为空");
-      return false;
-    }
-    importUser(importData?.deptId, importData?.file).then((response) => {
-      ElMessage.success(response.data);
-      closeDialog();
-      resetQuery();
-    });
+    // if (!importData?.deptId) {
+    //   ElMessage.warning("请选择部门");
+    //   return false;
+    // }
+    // if (!importData?.file) {
+    //   ElMessage.warning("上传Excel文件不能为空");
+    //   return false;
+    // }
+    // importUser(importData?.deptId, importData?.file).then((response) => {
+    //   ElMessage.success(response.data);
+    //   closeDialog();
+    //   resetQuery();
+    // });
   }
-}, 3000);
+});
 
 /** 删除用户 */
 function handleDelete(id?: number) {
-  const userIds = [id || removeIds.value].join(",");
-  if (!userIds) {
+  const itemIds = [id || removeIds.value].join(",");
+  if (!itemIds) {
     ElMessage.warning("请勾选删除项");
     return;
   }
@@ -264,7 +271,7 @@ function handleDelete(id?: number) {
     cancelButtonText: "取消",
     type: "warning",
   }).then(function () {
-    deleteUsers(userIds).then(() => {
+    deleteItem(itemIds).then(() => {
       ElMessage.success("删除成功");
       resetQuery();
     });
@@ -273,27 +280,27 @@ function handleDelete(id?: number) {
 
 /** 下载导入模板 */
 function downloadTemplate() {
-  downloadTemplateApi().then((response: any) => {
-    const fileData = response.data;
-    const fileName = decodeURI(
-      response.headers["content-disposition"].split(";")[1].split("=")[1]
-    );
-    const fileType =
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8";
-
-    const blob = new Blob([fileData], { type: fileType });
-    const downloadUrl = window.URL.createObjectURL(blob);
-
-    const downloadLink = document.createElement("a");
-    downloadLink.href = downloadUrl;
-    downloadLink.download = fileName;
-
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-
-    document.body.removeChild(downloadLink);
-    window.URL.revokeObjectURL(downloadUrl);
-  });
+  // downloadTemplateApi().then((response: any) => {
+  //   const fileData = response.data;
+  //   const fileName = decodeURI(
+  //     response.headers["content-disposition"].split(";")[1].split("=")[1]
+  //   );
+  //   const fileType =
+  //     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8";
+  //
+  //   const blob = new Blob([fileData], { type: fileType });
+  //   const downloadUrl = window.URL.createObjectURL(blob);
+  //
+  //   const downloadLink = document.createElement("a");
+  //   downloadLink.href = downloadUrl;
+  //   downloadLink.download = fileName;
+  //
+  //   document.body.appendChild(downloadLink);
+  //   downloadLink.click();
+  //
+  //   document.body.removeChild(downloadLink);
+  //   window.URL.revokeObjectURL(downloadUrl);
+  // });
 }
 
 /** Excel文件 Change */
@@ -312,27 +319,27 @@ function handleFileExceed(files: any) {
 
 /** 导出用户 */
 function handleExport() {
-  exportUser(queryParams).then((response: any) => {
-    const fileData = response.data;
-    const fileName = decodeURI(
-      response.headers["content-disposition"].split(";")[1].split("=")[1]
-    );
-    const fileType =
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8";
-
-    const blob = new Blob([fileData], { type: fileType });
-    const downloadUrl = window.URL.createObjectURL(blob);
-
-    const downloadLink = document.createElement("a");
-    downloadLink.href = downloadUrl;
-    downloadLink.download = fileName;
-
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-
-    document.body.removeChild(downloadLink);
-    window.URL.revokeObjectURL(downloadUrl);
-  });
+  // exportUser(queryParams).then((response: any) => {
+  //   const fileData = response.data;
+  //   const fileName = decodeURI(
+  //     response.headers["content-disposition"].split(";")[1].split("=")[1]
+  //   );
+  //   const fileType =
+  //     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8";
+  //
+  //   const blob = new Blob([fileData], { type: fileType });
+  //   const downloadUrl = window.URL.createObjectURL(blob);
+  //
+  //   const downloadLink = document.createElement("a");
+  //   downloadLink.href = downloadUrl;
+  //   downloadLink.download = fileName;
+  //
+  //   document.body.appendChild(downloadLink);
+  //   downloadLink.click();
+  //
+  //   document.body.removeChild(downloadLink);
+  //   window.URL.revokeObjectURL(downloadUrl);
+  // });
 }
 
 onMounted(() => {
@@ -392,12 +399,10 @@ onMounted(() => {
             <div class="flex justify-between">
               <div>
                 <el-button
-                  v-hasPerm="['sys:user:add']"
+                  v-hasPerm="['sys:package_item:add']"
                   type="success"
-                  @click="openDialog('user-form')"
-                >
-                  <i-ep-plus />
-                  新增
+                  @click="openDialog('detail-form')"
+                  >新增
                 </el-button>
                 <el-button
                   v-hasPerm="['sys:user:delete']"
@@ -471,6 +476,13 @@ onMounted(() => {
             />
 
             <el-table-column
+              label="price"
+              width="100"
+              align="center"
+              prop="itemPrice"
+            />
+
+            <el-table-column
               key="username"
               label="用户名"
               align="center"
@@ -525,7 +537,7 @@ onMounted(() => {
                   type="primary"
                   link
                   size="small"
-                  @click="openDialog('user-form', scope.row.id)"
+                  @click="openDialog('detail-form', scope.row.id)"
                 >
                   <i-ep-edit />
                   编辑
@@ -565,33 +577,30 @@ onMounted(() => {
     >
       <!-- 用户新增/编辑表单 -->
       <el-form
-        v-if="dialog.type === 'user-form'"
-        ref="userFormRef"
+        v-if="dialog.type === 'detail-form'"
+        ref="detailFormRef"
         :model="formData"
         :rules="rules"
         label-width="80px"
       >
-        <el-form-item label="用户名" prop="username">
-          <el-input
-            v-model="formData.username"
-            :readonly="!!formData.id"
-            placeholder="请输入用户名"
-          />
-        </el-form-item>
+        <!--        <el-form-item label="用户名" prop="username">-->
+        <!--          <el-input-->
+        <!--              v-model="formData.username"-->
+        <!--              :readonly="!!formData.id"-->
+        <!--              placeholder="请输入用户名"-->
+        <!--          />-->
+        <!--        </el-form-item>-->
 
         <el-form-item label="用户" prop="nickname">
           <el-input v-model="formData.username" placeholder="请输入用户昵称" />
         </el-form-item>
 
         <el-form-item label="包裹名称" prop="deptId">
-          <el-tree-select
-            v-model="formData.pkgName"
-            placeholder="请选包裹名称"
-            :data="deptList"
-            filterable
-            check-strictly
-            :render-after-expand="false"
-          />
+          <el-input v-model="formData.pkgName" placeholder="包裹名称" />
+        </el-form-item>
+
+        <el-form-item label="品物名" prop="deptId">
+          <el-input v-model="formData.itemName" placeholder="品物名" />
         </el-form-item>
 
         <!--        <el-form-item label="性别" prop="gender">-->
@@ -641,8 +650,8 @@ onMounted(() => {
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-radio-group v-model="formData.status">
-            <el-radio :label="1">正常</el-radio>
-            <el-radio :label="0">禁用</el-radio>
+            <el-radio :value="1">正常</el-radio>
+            <el-radio :value="0">禁用</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>

@@ -1,6 +1,7 @@
 import request from "@/utils/request";
 import { AxiosPromise } from "axios";
-import { PkgDetailPageVO, PkgDetailQuery } from "./types";
+import { PkgDetailForm, PkgDetailPageVO, PkgDetailQuery } from "./types";
+import { UserForm } from "@/api/system/user/types";
 
 const URL = import.meta.env.VITE_API_YOULAI_SYSTEM + "/pkg";
 
@@ -30,17 +31,17 @@ export function getDetailPage(
   });
 }
 
-// /**
-//  * 获取用户表单详情
-//  *
-//  * @param userId
-//  */
-// export function getUserForm(userId: number): AxiosPromise<PkgDetailForm> {
-//   return request({
-//     url: "/youlai-system/api/v1/users/" + userId + "/form",
-//     method: "get",
-//   });
-// }
+/**
+ * 获取用户表单详情
+ *
+ * @param userId
+ */
+export function getItemForm(id: number): AxiosPromise<PkgDetailForm> {
+  return request({
+    url: `${URL}/detail/` + id + "/form",
+    method: "get",
+  });
+}
 
 /**
  * 添加item
@@ -49,7 +50,7 @@ export function getDetailPage(
  */
 export function addItem(data: any) {
   return request({
-    url: `${URL}/detail/`,
+    url: `${URL}/detail`,
     method: "post",
     data: data,
   });
@@ -75,11 +76,11 @@ export function addItem(data: any) {
  * @param id
  * @param status
  */
-export function updateItem(id: number, status: number) {
+export function updateItem(id: number, data: UserForm) {
   return request({
-    url: "/youlai-system/api/v1/users/" + id + "/status",
-    method: "patch",
-    params: { status: status },
+    url: `${URL}/detail/` + id,
+    method: "put",
+    data: data,
   });
 }
 
@@ -104,7 +105,7 @@ export function updateItem(id: number, status: number) {
  */
 export function deleteItem(ids: string) {
   return request({
-    url: "/youlai-system/api/v1/users/" + ids,
+    url: `${URL}/detail/` + ids,
     method: "delete",
   });
 }
