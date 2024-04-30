@@ -1,28 +1,29 @@
 <!-- 用户管理 -->
 <script setup lang="ts">
-defineOptions({
-  name: "User",
-  inheritAttrs: false,
-});
-
+import { getDetailPage, updateItem } from "@/api/system/user-package";
 import {
-  getUserPage,
-  getUserForm,
-  deleteUsers,
   addUser,
-  updateUser,
-  updateUserStatus,
-  updateUserPassword,
+  deleteUsers,
   downloadTemplateApi,
   exportUser,
+  getUserForm,
   importUser,
+  updateUser,
 } from "@/api/system/user";
 import { getDeptOptions } from "@/api/system/dept";
 import { getRoleOptions } from "@/api/system/role";
-
-import { UserForm, UserQuery, UserPageVO } from "@/api/system/user/types";
 import type { UploadInstance } from "element-plus";
 import { genFileId } from "element-plus";
+import {
+  PkgDetailForm,
+  PkgDetailPageVO,
+  PkgDetailQuery,
+} from "@/api/system/user-package/types";
+
+defineOptions({
+  name: "Package",
+  inheritAttrs: false,
+});
 
 const queryFormRef = ref(ElForm); // 查询表单
 const userFormRef = ref(ElForm); // 用户表单
@@ -30,12 +31,12 @@ const uploadRef = ref<UploadInstance>(); // 上传组件
 
 const loading = ref(false); //  加载状态 用于分页
 const removeIds = ref([]); // 删除用户ID集合 用于批量删除
-const queryParams = reactive<UserQuery>({
+const queryParams = reactive<PkgDetailQuery>({
   pageNum: 1,
   pageSize: 10,
 });
 const total = ref(0); // 数据总数
-const pageData = ref<UserPageVO[]>(); // 用户分页数据
+const pageData = ref<PkgDetailPageVO[]>(); // 用户分页数据
 const deptList = ref<OptionType[]>(); // 部门下拉数据源
 const roleList = ref<OptionType[]>(); // 角色下拉数据源
 
@@ -48,7 +49,7 @@ const dialog = reactive({
 });
 
 // 用户表单数据
-const formData = reactive<UserForm>({
+const formData = reactive<PkgDetailForm>({
   status: 1,
 });
 
@@ -84,7 +85,7 @@ const rules = reactive({
 /** 查询 */
 function handleQuery() {
   loading.value = true;
-  getUserPage(queryParams)
+  getDetailPage(queryParams)
     .then(({ data }) => {
       pageData.value = data.list;
       total.value = data.total;
@@ -98,7 +99,7 @@ function handleQuery() {
 function resetQuery() {
   queryFormRef.value.resetFields();
   queryParams.pageNum = 1;
-  queryParams.deptId = undefined;
+  queryParams.pkgId = undefined;
   handleQuery();
 }
 
@@ -108,46 +109,40 @@ function handleSelectionChange(selection: any) {
 }
 
 /** 用户状态 Change*/
-function changeUserStatus(row: { [key: string]: any }) {
+function changePKgStatus(row: { [key: string]: any }) {
   const text = row.status === 1 ? "启用" : "停用";
-
+  //
   console.log(row.username);
-
   ElMessageBox.confirm("确认要" + text + row.username + "用户吗?", "警告", {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
     type: "warning",
-  }).then(() => {
-    updateUserStatus(row.id, row.status)
-      .then(() => {
-        ElMessage.success(text + "成功");
-      })
-      .catch(() => {
-        row.status = row.status === 1 ? 0 : 1;
-      });
-  });
-}
-
-/**重置密码 */
-function resetPassword(row: { [key: string]: any }) {
-  ElMessageBox.prompt(
-    "请输入用户「" + row.username + "」的新密码",
-    "重置密码",
-    {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
-    }
-  )
-    .then(({ value }) => {
-      if (!value) {
-        ElMessage.warning("请输入新密码");
-        return false;
-      }
-      updateUserPassword(row.id, value).then(() => {
-        ElMessage.success("密码重置成功，新密码是：" + value);
-      });
+  })
+    .then(() => {
+      updateItem(row.id, row.status)
+        .then(() => {
+          ElMessage.success(text + "成功");
+        })
+        .catch(() => {
+          row.status = row.status === 1 ? 0 : 1;
+          // row.status = initialStatus;
+          // ElMessage.info(text + "canceled");
+          // ElMessage({
+          //   type: "info",
+          //   message: "Delete canceled",
+          // });
+        });
     })
-    .catch(() => {});
+    .catch(() => {
+      console.log(row.status);
+      // row.status = initialStatus;
+      row.status = row.status === 1 ? 0 : 1;
+      //
+      //   ElMessage({
+      //     type: 'info',
+      //     message: 'Delete canceled',
+      //   })
+    });
 }
 
 /** 加载角色下拉数据源 */
@@ -179,12 +174,12 @@ async function openDialog(type: string, id?: number) {
     await loadDeptOptions();
     await loadRoleOptions();
     if (id) {
-      dialog.title = "修改用户";
+      dialog.title = "修改";
       getUserForm(id).then(({ data }) => {
         Object.assign(formData, { ...data });
       });
     } else {
-      dialog.title = "新增用户";
+      dialog.title = "新規";
     }
   } else if (dialog.type === "user-import") {
     // 用户导入弹窗
@@ -350,7 +345,7 @@ onMounted(() => {
     <el-row :gutter="20">
       <!-- 部门树 -->
       <el-col :lg="4" :xs="24" class="mb-[12px]">
-        <dept-tree v-model="queryParams.deptId" @node-click="handleQuery" />
+        <dept-tree v-model="queryParams.pkgId" @node-click="handleQuery" />
       </el-col>
 
       <!-- 用户列表 -->
@@ -380,13 +375,14 @@ onMounted(() => {
             </el-form-item>
 
             <el-form-item>
-              <el-button type="primary" @click="handleQuery"
-                ><i-ep-search />搜索</el-button
-              >
+              <el-button type="primary" @click="handleQuery">
+                <i-ep-search />
+                搜索
+              </el-button>
               <el-button @click="resetQuery">
                 <i-ep-refresh />
-                重置</el-button
-              >
+                重置
+              </el-button>
             </el-form-item>
           </el-form>
         </div>
@@ -399,15 +395,19 @@ onMounted(() => {
                   v-hasPerm="['sys:user:add']"
                   type="success"
                   @click="openDialog('user-form')"
-                  ><i-ep-plus />新增</el-button
                 >
+                  <i-ep-plus />
+                  新增
+                </el-button>
                 <el-button
                   v-hasPerm="['sys:user:delete']"
                   type="danger"
                   :disabled="removeIds.length === 0"
                   @click="handleDelete()"
-                  ><i-ep-delete />删除</el-button
                 >
+                  <i-ep-delete />
+                  删除
+                </el-button>
               </div>
               <div>
                 <el-dropdown split-button>
@@ -415,17 +415,22 @@ onMounted(() => {
                   <template #dropdown>
                     <el-dropdown-menu>
                       <el-dropdown-item @click="downloadTemplate">
-                        <i-ep-download />下载模板</el-dropdown-item
-                      >
+                        <i-ep-download />
+                        下载模板
+                      </el-dropdown-item>
                       <el-dropdown-item @click="openDialog('user-import')">
-                        <i-ep-top />导入数据</el-dropdown-item
-                      >
+                        <i-ep-top />
+                        导入数据
+                      </el-dropdown-item>
                     </el-dropdown-menu>
                   </template>
                 </el-dropdown>
-                <el-button class="ml-3" @click="handleExport"
-                  ><template #icon><i-ep-download /></template>导出</el-button
-                >
+                <el-button class="ml-3" @click="handleExport">
+                  <template #icon>
+                    <i-ep-download />
+                  </template>
+                  导出
+                </el-button>
               </div>
             </div>
           </template>
@@ -443,36 +448,46 @@ onMounted(() => {
               prop="id"
               width="100"
             />
+
+            <!--            <el-table-column-->
+            <!--              label="itemId"-->
+            <!--              width="120"-->
+            <!--              align="center"-->
+            <!--              prop="itemId"-->
+            <!--            />-->
+
+            <el-table-column
+              label="pkgName"
+              width="120"
+              align="center"
+              prop="pkgName"
+            />
+
+            <el-table-column
+              label="品物名"
+              width="100"
+              align="center"
+              prop="itemName"
+            />
+
             <el-table-column
               key="username"
               label="用户名"
               align="center"
               prop="username"
             />
-            <el-table-column
-              label="用户昵称"
-              width="120"
-              align="center"
-              prop="nickname"
-            />
 
-            <el-table-column
-              label="性别"
-              width="100"
-              align="center"
-              prop="genderLabel"
-            />
-
-            <el-table-column
-              label="部门"
-              width="120"
-              align="center"
-              prop="deptName"
-            />
             <el-table-column
               label="手机号码"
               align="center"
               prop="mobile"
+              width="120"
+            />
+
+            <el-table-column
+              label="注释"
+              align="center"
+              prop="comment"
               width="120"
             />
 
@@ -482,7 +497,7 @@ onMounted(() => {
                   v-model="scope.row.status"
                   :inactive-value="0"
                   :active-value="1"
-                  @change="changeUserStatus(scope.row)"
+                  @change="changePKgStatus(scope.row)"
                 />
               </template>
             </el-table-column>
@@ -494,30 +509,37 @@ onMounted(() => {
             />
             <el-table-column label="操作" fixed="right" width="220">
               <template #default="scope">
-                <el-button
-                  v-hasPerm="['sys:user:reset_pwd']"
-                  type="primary"
-                  size="small"
-                  link
-                  @click="resetPassword(scope.row)"
-                  ><i-ep-refresh-left />重置密码</el-button
-                >
+                <!--                <el-button-->
+                <!--                    v-hasPerm="['sys:user:reset_pwd']"-->
+                <!--                    type="primary"-->
+                <!--                    size="small"-->
+                <!--                    link-->
+                <!--                    @click="resetPassword(scope.row)"-->
+                <!--                >-->
+                <!--                  <i-ep-refresh-left/>-->
+                <!--                  重置密码-->
+                <!--                </el-button-->
+                <!--                >-->
                 <el-button
                   v-hasPerm="['sys:user:edit']"
                   type="primary"
                   link
                   size="small"
                   @click="openDialog('user-form', scope.row.id)"
-                  ><i-ep-edit />编辑</el-button
                 >
+                  <i-ep-edit />
+                  编辑
+                </el-button>
                 <el-button
                   v-hasPerm="['sys:user:delete']"
                   type="primary"
                   link
                   size="small"
                   @click="handleDelete(scope.row.id)"
-                  ><i-ep-delete />删除</el-button
                 >
+                  <i-ep-delete />
+                  删除
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -572,20 +594,20 @@ onMounted(() => {
           />
         </el-form-item>
 
-        <el-form-item label="性别" prop="gender">
-          <dictionary v-model="formData.gender" type-code="gender" />
-        </el-form-item>
+        <!--        <el-form-item label="性别" prop="gender">-->
+        <!--          <dictionary v-model="formData.gender" type-code="gender"/>-->
+        <!--        </el-form-item>-->
 
-        <el-form-item label="角色" prop="roleIds">
-          <el-select v-model="formData.roleIds" multiple placeholder="请选择">
-            <el-option
-              v-for="item in roleList"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
-        </el-form-item>
+        <!--        <el-form-item label="角色" prop="roleIds">-->
+        <!--          <el-select v-model="formData.roleIds" multiple placeholder="请选择">-->
+        <!--            <el-option-->
+        <!--                v-for="item in roleList"-->
+        <!--                :key="item.value"-->
+        <!--                :label="item.label"-->
+        <!--                :value="item.value"-->
+        <!--            />-->
+        <!--          </el-select>-->
+        <!--        </el-form-item>-->
 
         <el-form-item label="手机号码" prop="mobile">
           <el-input

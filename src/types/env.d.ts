@@ -15,6 +15,9 @@ interface ImportMetaEnv {
   /** API 地址 */
   VITE_APP_API_URL: string;
   /** 是否开启 Mock 服务 */
+
+  /** API 地址 */
+  VITE_API_YOULAI_SYSTEM: string;
 }
 
 interface ImportMeta {
