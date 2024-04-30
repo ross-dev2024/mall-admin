@@ -49,7 +49,7 @@ export function getDetailPage(
  */
 export function addItem(data: any) {
   return request({
-    url: "${URL}/detail/",
+    url: `${URL}/detail/`,
     method: "post",
     data: data,
   });

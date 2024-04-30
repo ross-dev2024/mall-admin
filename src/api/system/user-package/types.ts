@@ -94,7 +94,7 @@ export interface PkgDetailForm {
   itemId?: number;
 
   /**
-   * pkgName
+   * itemName
    */
   itemName?: string;
 

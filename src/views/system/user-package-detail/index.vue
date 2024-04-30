@@ -1,5 +1,7 @@
 <!-- 用户管理 -->
 <script setup lang="ts">
+import { PkgDetailForm } from "@/api/system/user-package/types";
+
 defineOptions({
   name: "User",
   inheritAttrs: false,
@@ -42,13 +44,13 @@ const roleList = ref<OptionType[]>(); // 角色下拉数据源
 // 弹窗对象
 const dialog = reactive({
   visible: false,
-  type: "user-form",
+  type: "detail-form",
   width: 1200,
   title: "",
 });
 
 // 用户表单数据
-const formData = reactive<UserForm>({
+const formData = reactive<PkgDetailForm>({
   status: 1,
 });
 
@@ -380,13 +382,14 @@ onMounted(() => {
             </el-form-item>
 
             <el-form-item>
-              <el-button type="primary" @click="handleQuery"
-                ><i-ep-search />搜索</el-button
-              >
+              <el-button type="primary" @click="handleQuery">
+                <i-ep-search />
+                搜索
+              </el-button>
               <el-button @click="resetQuery">
                 <i-ep-refresh />
-                重置</el-button
-              >
+                重置
+              </el-button>
             </el-form-item>
           </el-form>
         </div>
@@ -399,15 +402,19 @@ onMounted(() => {
                   v-hasPerm="['sys:user:add']"
                   type="success"
                   @click="openDialog('user-form')"
-                  ><i-ep-plus />新增</el-button
                 >
+                  <i-ep-plus />
+                  新增
+                </el-button>
                 <el-button
                   v-hasPerm="['sys:user:delete']"
                   type="danger"
                   :disabled="removeIds.length === 0"
                   @click="handleDelete()"
-                  ><i-ep-delete />删除</el-button
                 >
+                  <i-ep-delete />
+                  删除
+                </el-button>
               </div>
               <div>
                 <el-dropdown split-button>
@@ -415,17 +422,22 @@ onMounted(() => {
                   <template #dropdown>
                     <el-dropdown-menu>
                       <el-dropdown-item @click="downloadTemplate">
-                        <i-ep-download />下载模板</el-dropdown-item
-                      >
+                        <i-ep-download />
+                        下载模板
+                      </el-dropdown-item>
                       <el-dropdown-item @click="openDialog('user-import')">
-                        <i-ep-top />导入数据</el-dropdown-item
-                      >
+                        <i-ep-top />
+                        导入数据
+                      </el-dropdown-item>
                     </el-dropdown-menu>
                   </template>
                 </el-dropdown>
-                <el-button class="ml-3" @click="handleExport"
-                  ><template #icon><i-ep-download /></template>导出</el-button
-                >
+                <el-button class="ml-3" @click="handleExport">
+                  <template #icon>
+                    <i-ep-download />
+                  </template>
+                  导出
+                </el-button>
               </div>
             </div>
           </template>
@@ -500,24 +512,30 @@ onMounted(() => {
                   size="small"
                   link
                   @click="resetPassword(scope.row)"
-                  ><i-ep-refresh-left />重置密码</el-button
                 >
+                  <i-ep-refresh-left />
+                  重置密码
+                </el-button>
                 <el-button
                   v-hasPerm="['sys:user:edit']"
                   type="primary"
                   link
                   size="small"
                   @click="openDialog('user-form', scope.row.id)"
-                  ><i-ep-edit />编辑</el-button
                 >
+                  <i-ep-edit />
+                  编辑
+                </el-button>
                 <el-button
                   v-hasPerm="['sys:user:delete']"
                   type="primary"
                   link
                   size="small"
                   @click="handleDelete(scope.row.id)"
-                  ><i-ep-delete />删除</el-button
                 >
+                  <i-ep-delete />
+                  删除
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -557,14 +575,14 @@ onMounted(() => {
           />
         </el-form-item>
 
-        <el-form-item label="用户昵称" prop="nickname">
-          <el-input v-model="formData.nickname" placeholder="请输入用户昵称" />
+        <el-form-item label="用户" prop="nickname">
+          <el-input v-model="formData.username" placeholder="请输入用户昵称" />
         </el-form-item>
 
-        <el-form-item label="所属部门" prop="deptId">
+        <el-form-item label="包裹名称" prop="deptId">
           <el-tree-select
-            v-model="formData.deptId"
-            placeholder="请选择所属部门"
+            v-model="formData.pkgName"
+            placeholder="请选包裹名称"
             :data="deptList"
             filterable
             check-strictly
@@ -572,37 +590,51 @@ onMounted(() => {
           />
         </el-form-item>
 
-        <el-form-item label="性别" prop="gender">
-          <dictionary v-model="formData.gender" type-code="gender" />
-        </el-form-item>
+        <!--        <el-form-item label="性别" prop="gender">-->
+        <!--          <dictionary v-model="formData.gender" type-code="gender" />-->
+        <!--        </el-form-item>-->
 
-        <el-form-item label="角色" prop="roleIds">
-          <el-select v-model="formData.roleIds" multiple placeholder="请选择">
-            <el-option
-              v-for="item in roleList"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
-        </el-form-item>
+        <!--        <el-form-item label="角色" prop="roleIds">-->
+        <!--          <el-select v-model="formData.roleIds" multiple placeholder="请选择">-->
+        <!--            <el-option-->
+        <!--              v-for="item in roleList"-->
+        <!--              :key="item.value"-->
+        <!--              :label="item.label"-->
+        <!--              :value="item.value"-->
+        <!--            />-->
+        <!--          </el-select>-->
+        <!--        </el-form-item>-->
 
-        <el-form-item label="手机号码" prop="mobile">
+        <!--        <el-form-item label="手机号码" prop="mobile">-->
+        <!--          <el-input-->
+        <!--            v-model="formData.mobile"-->
+        <!--            placeholder="请输入手机号码"-->
+        <!--            maxlength="11"-->
+        <!--          />-->
+        <!--        </el-form-item>-->
+
+        <!--        <el-form-item label="邮箱" prop="email">-->
+        <!--          <el-input-->
+        <!--            v-model="formData.email"-->
+        <!--            placeholder="请输入邮箱"-->
+        <!--            maxlength="50"-->
+        <!--          />-->
+        <!--        </el-form-item>-->
+
+        <el-form-item label="価格" prop="mobile">
           <el-input
-            v-model="formData.mobile"
-            placeholder="请输入手机号码"
+            v-model="formData.itemPrice"
+            placeholder="请输入価格"
             maxlength="11"
           />
         </el-form-item>
-
-        <el-form-item label="邮箱" prop="email">
+        <el-form-item label="comment" prop="mobile">
           <el-input
-            v-model="formData.email"
-            placeholder="请输入邮箱"
-            maxlength="50"
+            v-model="formData.comment"
+            placeholder="请输入说明 "
+            maxlength="11"
           />
         </el-form-item>
-
         <el-form-item label="状态" prop="status">
           <el-radio-group v-model="formData.status">
             <el-radio :label="1">正常</el-radio>
