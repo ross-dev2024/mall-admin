@@ -127,7 +127,7 @@ function changePKgStatus(row: { [key: string]: any }) {
   const text = row.status === 1 ? "启用" : "停用";
   //
   console.log(row.username);
-  ElMessageBox.confirm("确认要" + text + row.username + "用户吗?", "警告", {
+  ElMessageBox.confirm("确认要" + text + row.itemName + "吗?", "警告", {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
     type: "warning",
