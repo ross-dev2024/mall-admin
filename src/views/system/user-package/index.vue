@@ -94,16 +94,10 @@ const rules = reactive({
       trigger: "blur",
     },
   ],
-  itemPrice: [
-    { required: true, message: "请输入价格", trigger: "blur" },
-    {
-      type: "number",
-      min: 1,
-      max: 10000,
-      message: "价格必须是数字格式:1-10000",
-      trigger: "blur",
-    },
-  ],
+  // itemPrice: [
+  //   {required: true, message: '请输入价格', trigger: 'blur'},
+  //   {type: 'number', min: 1, max: 10000, message: '价格必须是数字格式:1-10000', trigger: 'blur'},
+  // ],
 });
 
 /** 查询 */
@@ -674,7 +668,20 @@ onMounted(() => {
         <!--          />-->
         <!--        </el-form-item>-->
 
-        <el-form-item label="価格" prop="itemPrice">
+        <el-form-item
+          label="価格"
+          prop="itemPrice"
+          :rules="[
+            { required: true, message: '请输入价格', trigger: 'blur' },
+            {
+              type: 'number',
+              min: 1,
+              max: 10000,
+              message: '价格必须是数字格式:1-10000',
+              trigger: 'blur',
+            },
+          ]"
+        >
           <el-input
             v-model.number="formData.itemPrice"
             placeholder="请输入価格"
