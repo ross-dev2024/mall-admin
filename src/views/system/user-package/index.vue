@@ -17,8 +17,6 @@ import {
 //   importUser,
 //   updateUser,
 // } from "@/api/system/user-package";
-import { getDeptOptions } from "@/api/system/dept";
-import { getRoleOptions } from "@/api/system/role";
 import type { UploadInstance } from "element-plus";
 import { genFileId } from "element-plus";
 import {
@@ -26,8 +24,6 @@ import {
   PkgDetailPageVO,
   PkgDetailQuery,
 } from "@/api/system/user-package/types";
-import { UserForm } from "@/api/system/user/types";
-import { transform } from "lodash";
 
 defineOptions({
   name: "Package",
