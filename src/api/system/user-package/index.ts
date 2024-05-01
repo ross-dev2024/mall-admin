@@ -15,6 +15,32 @@ const URL = import.meta.env.VITE_API_YOULAI_SYSTEM + "/pkg";
 //   });
 // }
 
+// /**
+//  * 包裹一覧
+//  *
+//  * @param queryParams
+//  */
+// export function getPkgs(
+//   queryParams: PkgDetailQuery
+// ): AxiosPromise<PageResult<PkgDetailPageVO[]>> {
+//   // console.log(`${URL}/pages`);
+//   return request({
+//     url: `${URL}/detail/pages`,
+//     method: "get",
+//     params: queryParams,
+//   });
+// }
+
+/**
+ * pkg下拉列表
+ */
+export function getPkgOptions(): AxiosPromise<OptionType[]> {
+  return request({
+    url: `${URL}/options`,
+    method: "get",
+  });
+}
+
 /**
  * 包裹详细
  *

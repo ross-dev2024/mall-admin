@@ -492,7 +492,7 @@ onMounted(() => {
               prop="createTime"
               width="180"
             />
-            <el-table-column label="操作" fixed="right" width="220">
+            <el-table-column label="操作" fixed="right" width="300">
               <template #default="scope">
                 <el-button
                   v-hasPerm="['sys:user:reset_pwd']"
@@ -510,8 +510,16 @@ onMounted(() => {
                   @click="openDialog('user-form', scope.row.id)"
                   ><i-ep-edit />编辑</el-button
                 >
+                <!--                   <el-button-->
+                <!--                  v-hasPerm="['sys:user:edit']"-->
+                <!--                  type="primary"-->
+                <!--                  link-->
+                <!--                  size="small"-->
+                <!--                  @click="openDialog('user-form', scope.row.id)"-->
+                <!--                  ><i-ep-edit />编辑</el-button-->
+                <!--                >-->
                 <el-button
-                  v-hasPerm="['sys:user:delete']"
+                  v-hasPerm="['sys:user:del']"
                   type="primary"
                   link
                   size="small"

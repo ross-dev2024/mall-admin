@@ -5,6 +5,7 @@ import {
   deleteItem,
   getDetailPage,
   getItemForm,
+  getPkgOptions,
   updateItem,
 } from "@/api/system/user-package";
 // import {
@@ -26,6 +27,7 @@ import {
   PkgDetailQuery,
 } from "@/api/system/user-package/types";
 import { UserForm } from "@/api/system/user/types";
+import { transform } from "lodash";
 
 defineOptions({
   name: "Package",
@@ -44,8 +46,9 @@ const queryParams = reactive<PkgDetailQuery>({
 });
 const total = ref(0); // 数据总数
 const pageData = ref<PkgDetailPageVO[]>(); // 用户分页数据
-const deptList = ref<OptionType[]>(); // 部门下拉数据源
-const roleList = ref<OptionType[]>(); // 角色下拉数据源
+// const deptList = ref<OptionType[]>(); // 部门下拉数据源
+// const roleList = ref<OptionType[]>(); // 角色下拉数据源
+const pkgList = ref<OptionType[]>(); // 部门下拉数据源
 
 // 弹窗对象
 const dialog = reactive({
@@ -70,8 +73,12 @@ const importData = reactive({
 // 校验规则
 const rules = reactive({
   username: [{ required: true, message: "用户名不能为空", trigger: "blur" }],
-  // nickname: [{required: true, message: "用户昵称不能为空", trigger: "blur"}],
-  // deptId: [{required: true, message: "所属部门不能为空", trigger: "blur"}],
+  pkgName: [{ required: true, message: "pkg不能为空", trigger: "blur" }],
+  itemName: [
+    { required: true, message: "item不能为空", trigger: "blur" },
+    { min: 1, max: 10, message: "item在1到10之间", trigger: "blur" },
+  ],
+  pkgId: [{ required: true, message: "pkg不能为空", trigger: "blur" }],
   // roleIds: [{required: true, message: "用户角色不能为空", trigger: "blur"}],
   email: [
     {
@@ -84,6 +91,16 @@ const rules = reactive({
     {
       pattern: /^1[3|4|5|6|7|8|9][0-9]\d{8}$/,
       message: "请输入正确的手机号码",
+      trigger: "blur",
+    },
+  ],
+  itemPrice: [
+    { required: true, message: "请输入价格", trigger: "blur" },
+    {
+      type: "number",
+      min: 1,
+      max: 10000,
+      message: "价格必须是数字格式:1-10000",
       trigger: "blur",
     },
   ],
@@ -153,16 +170,23 @@ function changePKgStatus(row: { [key: string]: any }) {
 }
 
 /** 加载角色下拉数据源 */
-async function loadRoleOptions() {
-  getRoleOptions().then((response) => {
-    roleList.value = response.data;
-  });
-}
+// async function loadRoleOptions() {
+//   getRoleOptions().then((response) => {
+//     roleList.value = response.data;
+//   });
+// }
 
-/** 加载部门下拉数据源 */
-async function loadDeptOptions() {
-  getDeptOptions().then((response) => {
-    deptList.value = response.data;
+// /** 加载部门下拉数据源 */
+// async function loadDeptOptions() {
+//   getDeptOptions().then((response) => {
+//     deptList.value = response.data;
+//   });
+// }
+
+/** 加载pkg下拉数据源 */
+async function loadPkgOptions() {
+  getPkgOptions().then((response) => {
+    pkgList.value = response.data;
   });
 }
 
@@ -178,8 +202,9 @@ async function openDialog(type: string, id?: number) {
 
   if (dialog.type === "detail-form") {
     // 用户表单弹窗
-    await loadDeptOptions();
-    await loadRoleOptions();
+    // await loadDeptOptions();
+    // await loadRoleOptions();
+    await loadPkgOptions();
     if (id) {
       dialog.title = "修改";
       getItemForm(id).then(({ data }) => {
@@ -192,7 +217,7 @@ async function openDialog(type: string, id?: number) {
     // 用户导入弹窗
     dialog.title = "导入用户";
     dialog.width = 600;
-    loadDeptOptions();
+    // loadDeptOptions();
   }
 }
 
@@ -203,7 +228,7 @@ async function openDialog(type: string, id?: number) {
  */
 function closeDialog() {
   dialog.visible = false;
-  if (dialog.type === "user-form") {
+  if (dialog.type === "detail-form") {
     detailFormRef.value.resetFields();
     detailFormRef.value.clearValidate();
 
@@ -352,7 +377,7 @@ onMounted(() => {
     <el-row :gutter="20">
       <!-- 部门树 -->
       <el-col :lg="4" :xs="24" class="mb-[12px]">
-        <dept-tree v-model="queryParams.pkgId" @node-click="handleQuery" />
+        <pkg-tree v-model="queryParams.pkgId" @node-click="handleQuery" />
       </el-col>
 
       <!-- 用户列表 -->
@@ -405,7 +430,7 @@ onMounted(() => {
                   >新增
                 </el-button>
                 <el-button
-                  v-hasPerm="['sys:user:delete']"
+                  v-hasPerm="['sys:package_item:delete']"
                   type="danger"
                   :disabled="removeIds.length === 0"
                   @click="handleDelete()"
@@ -591,15 +616,30 @@ onMounted(() => {
         <!--          />-->
         <!--        </el-form-item>-->
 
-        <el-form-item label="用户" prop="nickname">
+        <el-form-item label="用户" prop="username">
           <el-input v-model="formData.username" placeholder="请输入用户昵称" />
         </el-form-item>
 
-        <el-form-item label="包裹名称" prop="deptId">
-          <el-input v-model="formData.pkgName" placeholder="包裹名称" />
+        <el-form-item label="email" prop="email">
+          <el-input v-model="formData.email" placeholder="请输入email" />
         </el-form-item>
 
-        <el-form-item label="品物名" prop="deptId">
+        <!--        <el-form-item label="包裹名称" prop="deptId">-->
+        <!--          <el-input v-model="formData.pkgName" placeholder="包裹名称" />-->
+        <!--        </el-form-item>-->
+
+        <el-form-item label="pkg名" prop="pkgId">
+          <el-tree-select
+            v-model="formData.pkgId"
+            placeholder="请选择pkg名"
+            :data="pkgList"
+            filterable
+            check-strictly
+            :render-after-expand="false"
+          />
+        </el-form-item>
+
+        <el-form-item label="品物名" prop="itemName">
           <el-input v-model="formData.itemName" placeholder="品物名" />
         </el-form-item>
 
@@ -607,16 +647,16 @@ onMounted(() => {
         <!--          <dictionary v-model="formData.gender" type-code="gender"/>-->
         <!--        </el-form-item>-->
 
-        <!--        <el-form-item label="角色" prop="roleIds">-->
-        <!--          <el-select v-model="formData.roleIds" multiple placeholder="请选择">-->
-        <!--            <el-option-->
-        <!--                v-for="item in roleList"-->
-        <!--                :key="item.value"-->
-        <!--                :label="item.label"-->
-        <!--                :value="item.value"-->
-        <!--            />-->
-        <!--          </el-select>-->
-        <!--        </el-form-item>-->
+        <!--                <el-form-item label="包裹名称" prop="roleIds">-->
+        <!--                  <el-select v-model="formData.roleIds" multiple placeholder="请选择">-->
+        <!--                    <el-option-->
+        <!--                        v-for="item in roleList"-->
+        <!--                        :key="item.value"-->
+        <!--                        :label="item.label"-->
+        <!--                        :value="item.value"-->
+        <!--                    />-->
+        <!--                  </el-select>-->
+        <!--                </el-form-item>-->
 
         <!--        <el-form-item label="手机号码" prop="mobile">-->
         <!--          <el-input-->
@@ -634,19 +674,14 @@ onMounted(() => {
         <!--          />-->
         <!--        </el-form-item>-->
 
-        <el-form-item label="価格" prop="mobile">
+        <el-form-item label="価格" prop="itemPrice">
           <el-input
-            v-model="formData.itemPrice"
+            v-model.number="formData.itemPrice"
             placeholder="请输入価格"
-            maxlength="11"
           />
         </el-form-item>
-        <el-form-item label="comment" prop="mobile">
-          <el-input
-            v-model="formData.comment"
-            placeholder="请输入说明 "
-            maxlength="11"
-          />
+        <el-form-item label="comment" prop="comment">
+          <el-input v-model="formData.comment" placeholder="请输入说明 " />
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-radio-group v-model="formData.status">
@@ -656,47 +691,47 @@ onMounted(() => {
         </el-form-item>
       </el-form>
 
-      <!-- 用户导入表单 -->
-      <el-form
-        v-else-if="dialog.type === 'user-import'"
-        :model="importData"
-        label-width="100px"
-      >
-        <el-form-item label="部门">
-          <el-tree-select
-            v-model="importData.deptId"
-            placeholder="请选择部门"
-            :data="deptList"
-            filterable
-            check-strictly
-          />
-        </el-form-item>
+      <!--      &lt;!&ndash; 用户导入表单 &ndash;&gt;-->
+      <!--      <el-form-->
+      <!--          v-else-if="dialog.type === 'user-import'"-->
+      <!--          :model="importData"-->
+      <!--          label-width="100px"-->
+      <!--      >-->
+      <!--        <el-form-item label="部门">-->
+      <!--          <el-tree-select-->
+      <!--              v-model="importData.deptId"-->
+      <!--              placeholder="请选择部门"-->
+      <!--              :data="deptList"-->
+      <!--              filterable-->
+      <!--              check-strictly-->
+      <!--          />-->
+      <!--        </el-form-item>-->
 
-        <el-form-item label="Excel文件">
-          <el-upload
-            ref="uploadRef"
-            action=""
-            drag
-            accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-            :limit="1"
-            :auto-upload="false"
-            :file-list="importData.fileList"
-            :on-change="handleFileChange"
-            :on-exceed="handleFileExceed"
-          >
-            <el-icon class="el-icon--upload">
-              <i-ep-upload-filled />
-            </el-icon>
-            <div class="el-upload__text">
-              将文件拖到此处，或
-              <em>点击上传</em>
-            </div>
-            <template #tip>
-              <div>xls/xlsx files</div>
-            </template>
-          </el-upload>
-        </el-form-item>
-      </el-form>
+      <!--        <el-form-item label="Excel文件">-->
+      <!--          <el-upload-->
+      <!--              ref="uploadRef"-->
+      <!--              action=""-->
+      <!--              drag-->
+      <!--              accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"-->
+      <!--              :limit="1"-->
+      <!--              :auto-upload="false"-->
+      <!--              :file-list="importData.fileList"-->
+      <!--              :on-change="handleFileChange"-->
+      <!--              :on-exceed="handleFileExceed"-->
+      <!--          >-->
+      <!--            <el-icon class="el-icon&#45;&#45;upload">-->
+      <!--              <i-ep-upload-filled/>-->
+      <!--            </el-icon>-->
+      <!--            <div class="el-upload__text">-->
+      <!--              将文件拖到此处，或-->
+      <!--              <em>点击上传</em>-->
+      <!--            </div>-->
+      <!--            <template #tip>-->
+      <!--              <div>xls/xlsx files</div>-->
+      <!--            </template>-->
+      <!--          </el-upload>-->
+      <!--        </el-form-item>-->
+      <!--      </el-form>-->
       <!-- 弹窗底部操作按钮 -->
       <template #footer>
         <div class="dialog-footer">

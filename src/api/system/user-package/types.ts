@@ -83,10 +83,10 @@ export interface PkgDetailForm {
    */
   pkgId?: number;
 
-  /**
-   * pkgName
-   */
-  pkgName?: string;
+  // /**
+  //  * pkgName
+  //  */
+  // pkgName?: string;
 
   /**
    * pkgId
@@ -107,6 +107,11 @@ export interface PkgDetailForm {
    * 所属用户名
    */
   username?: string;
+
+  /**
+   * email
+   */
+  email?: string;
 
   /**
    * comment
